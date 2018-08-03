@@ -226,13 +226,13 @@ class KeyValueStore(object):
         # the source goes out of scope shortly after, taking care of the issue
         # this allows us to support file-like objects without close as well,
         # such as BytesIO.
-        source = self.open(key)
-        while True:
-            buf = source.read(bufsize)
-            file.write(buf)
+        with self.open(key) as source:
+            while True:
+                buf = source.read(bufsize)
+                file.write(buf)
 
-            if len(buf) < bufsize:
-                break
+                if len(buf) < bufsize:
+                    break
 
     def _get_filename(self, key, filename):
         """Write key to file. Either this method or
@@ -244,7 +244,7 @@ class KeyValueStore(object):
         :param key: Key to be retrieved
         :param filename: Filename to write to
         """
-        with open(filename, 'wb') as dest:
+        with self.open(filename) as dest:
             return self._get_file(key, dest)
 
     def _has_key(self, key):
@@ -302,7 +302,7 @@ class KeyValueStore(object):
         :param key: Key under which data should be stored
         :param file: Filename of file to store
         """
-        with open(filename, 'rb') as source:
+        with self.open(filename) as source:
             return self._put_file(key, source)
 
 
@@ -420,7 +420,7 @@ class TimeToLiveMixin(object):
         raise NotImplementedError
 
     def _put_filename(self, key, filename, ttl_secs):
-        with open(filename, 'rb') as source:
+        with self.open(filename) as source:
             return self._put_file(key, source, ttl_secs)
 
 
